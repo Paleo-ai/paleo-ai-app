@@ -1,33 +1,22 @@
-import streamlit as st
+from flask import Flask, request, jsonify
 from modules.chatbot import respond
-from modules.vision import analyze_image
-from modules.ml_model import predict_value
 
-st.set_page_config(page_title="AI Asistent", layout="centered")
-st.title("🤖 AI Asistent pro rozpoznání nálezů")
+app = Flask(__name__)
 
-st.sidebar.header("Modul")
-modul = st.sidebar.radio("Vyber funkci:", ["Počítačové vidění", "Chatbot", "Predikce hodnoty"])
+@app.route("/", methods=["GET"])
+def index():
+    return "Ahoj! API běží. Pošli POST na /chat."
 
-if modul == "Počítačové vidění":
-    st.header("🖼️ Rozpoznání obrázku (typ mince)")
-    uploaded_file = st.file_uploader("Nahraj obrázek mince", type=["jpg", "jpeg", "png"])
-    if uploaded_file:
-        st.image(uploaded_file, caption="Nahraný obrázek", use_column_width=True)
-        result = analyze_image(uploaded_file)
-        st.success(f"Rozpoznaný typ: {result}")
+@app.route("/chat", methods=["POST"])
+def chat():
+    data = request.get_json()
+    user_input = data.get("message", "")
+    
+    if not user_input:
+        return jsonify({"error": "Zpráva chybí!"}), 400
 
-elif modul == "Chatbot":
-    st.header("💬 Chat s AI")
-    user_input = st.text_input("Napiš dotaz:")
-    if user_input:
-        answer = respond(user_input)
-        st.text_area("Odpověď:", value=answer, height=150)
+    reply = respond(user_input)
+    return jsonify({"response": reply})
 
-elif modul == "Predikce hodnoty":
-    st.header("📊 Odhad hodnoty nálezu")
-    typ = st.selectbox("Typ nálezu:", ["Mince", "Odznak", "Knoflík", "Jiné"])
-    stav = st.slider("Stav (1 = špatný, 10 = jako nový):", 1, 10, 5)
-    if st.button("Spočítat odhad"):
-        value = predict_value(typ, stav)
-        st.info(f"Odhadovaná hodnota: {value} Kč")
+if __name__ == "__main__":
+    app.run(debug=True)
