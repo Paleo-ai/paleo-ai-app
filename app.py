@@ -1,22 +1,15 @@
-from flask import Flask, request, jsonify
+# app.py
+import streamlit as st
 from modules.chatbot import respond
 
-app = Flask(__name__)
+st.set_page_config(page_title="AI Asistent - Rozpoznávání mincí")
 
-@app.route("/", methods=["GET"])
-def index():
-    return "Ahoj! API běží. Pošli POST na /chat."
+st.title("🧠 AI Asistent pro rozpoznání mincí")
+st.write("Zeptej se mě na cokoliv nebo mi pošli fotku mince!")
 
-@app.route("/chat", methods=["POST"])
-def chat():
-    data = request.get_json()
-    user_input = data.get("message", "")
-    
-    if not user_input:
-        return jsonify({"error": "Zpráva chybí!"}), 400
+# Chat vstup
+user_input = st.text_input("💬 Tvoje zpráva:")
 
-    reply = respond(user_input)
-    return jsonify({"response": reply})
-
-if __name__ == "__main__":
-    app.run(debug=True)
+if user_input:
+    response = respond(user_input)
+    st.markdown(f"**🤖 Odpověď:** {response}")
